@@ -1476,30 +1476,26 @@
     document.querySelectorAll('.tech-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         if (running) return;
-        const tech = btn.dataset.tech;
-        if (tech === 'wimhof' || tech === 'holo') {
-          pendingTech = tech;
-          safetyText.textContent = SAFETY_MSGS[tech];
-          safetyModal.classList.add('open');
-        } else {
-          prevTech = tech;
-          switchTechnique(tech);
-        }
+        switchTechnique(btn.dataset.tech);
       });
     });
 
     document.getElementById('modalOk').addEventListener('click', () => {
       safetyModal.classList.remove('open');
-      if (pendingTech) { prevTech = pendingTech; switchTechnique(pendingTech); pendingTech = null; }
+      startSession();
     });
     document.getElementById('modalCancel').addEventListener('click', () => {
       safetyModal.classList.remove('open');
-      if (prevTech) switchTechnique(prevTech);
-      pendingTech = null;
     });
 
     startBtn.addEventListener('click', () => {
-      if (running) stopSession(); else startSession();
+      if (running) { stopSession(); return; }
+      if (currentTech === 'wimhof' || currentTech === 'holo') {
+        safetyText.textContent = SAFETY_MSGS[currentTech];
+        safetyModal.classList.add('open');
+      } else {
+        startSession();
+      }
     });
 
     renderStats();
@@ -1520,11 +1516,7 @@
       }
 
       if (practice && practice !== 'free') {
-        if (practice === 'wimhof' || practice === 'holo') {
-          pendingTech = practice;
-          safetyText.textContent = SAFETY_MSGS[practice];
-          safetyModal.classList.add('open');
-        } else if (['box', '478', 'nadi', 'custom'].includes(practice)) {
+        if (['box', '478', 'nadi', 'custom', 'wimhof', 'holo'].includes(practice)) {
           switchTechnique(practice);
         }
       }
