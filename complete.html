@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Pranayama — Session Complete</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07080a;
+      --border: rgba(255,255,255,0.06);
+      --border-hover: rgba(125, 211, 224, 0.35);
+      --text: #e8e6e1;
+      --text-muted: rgba(232, 230, 225, 0.45);
+      --text-dim: rgba(232, 230, 225, 0.3);
+      --teal: #7DD3E0;
+      --inhale: #5DA9E9;
+      --hold-in: #B794F4;
+      --exhale: #48BB78;
+      --hold-out: #F6AD55;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 18%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(125, 211, 224, 0.08) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .app {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      padding: 3.5rem 1.75rem 2.5rem;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    .label {
+      text-align: center;
+      font-size: 0.7rem;
+      font-weight: 400;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 2rem;
+      opacity: 0;
+      animation: fadeIn 0.8s ease-out 0.1s forwards;
+    }
+
+    .orb-wrap {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+      opacity: 0;
+      animation: orbReveal 1.2s ease-out 0.3s forwards;
+    }
+
+    .orb {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, rgba(125, 211, 224, 0.7), rgba(125, 211, 224, 0.1) 70%);
+      box-shadow:
+        0 0 20px rgba(125, 211, 224, 0.2),
+        0 0 50px rgba(125, 211, 224, 0.1),
+        inset 0 0 15px rgba(255, 255, 255, 0.08);
+    }
+
+    @keyframes orbReveal {
+      from { opacity: 0; transform: scale(0.7); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    .headline {
+      text-align: center;
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 300;
+      font-size: 2.2rem;
+      line-height: 1.2;
+      color: var(--teal);
+      margin-bottom: 0.4rem;
+      opacity: 0;
+      animation: fadeIn 0.9s ease-out 0.6s forwards;
+    }
+
+    .session-meta {
+      text-align: center;
+      font-size: 0.75rem;
+      font-weight: 300;
+      color: var(--text-muted);
+      letter-spacing: 0.03em;
+      margin-bottom: 2.5rem;
+      opacity: 0;
+      animation: fadeIn 0.9s ease-out 0.8s forwards;
+    }
+
+    .arc {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.9rem;
+      margin-bottom: 3rem;
+      opacity: 0;
+      animation: fadeIn 1s ease-out 1s forwards;
+    }
+
+    .arc-chip {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      padding: 0.55rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.02);
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1rem;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .arc-chip.placeholder { color: var(--text-dim); font-style: italic; }
+
+    .arc-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      box-shadow: 0 0 10px currentColor;
+    }
+
+    .arc-dot.empty {
+      background: transparent;
+      border: 1px dashed var(--text-dim);
+      box-shadow: none;
+    }
+
+    .arc-dot.inhale   { background: var(--inhale);   color: var(--inhale); }
+    .arc-dot.hold-in  { background: var(--hold-in);  color: var(--hold-in); }
+    .arc-dot.exhale   { background: var(--exhale);   color: var(--exhale); }
+    .arc-dot.hold-out { background: var(--hold-out); color: var(--hold-out); }
+    .arc-dot.ease     { background: var(--text); color: var(--text); opacity: 0.6; }
+
+    .arc-line {
+      flex: 0 1 50px;
+      height: 1px;
+      background-image: linear-gradient(to right, var(--text-dim) 50%, transparent 50%);
+      background-size: 6px 1px;
+      background-repeat: repeat-x;
+      opacity: 0.6;
+    }
+
+    .question {
+      text-align: center;
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 300;
+      font-size: 1.8rem;
+      color: var(--teal);
+      margin-bottom: 1.5rem;
+      opacity: 0;
+      animation: fadeIn 0.9s ease-out 1.2s forwards;
+    }
+
+    .emotions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      margin-bottom: 2rem;
+    }
+
+    .emotion {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      padding: 0.95rem 1.25rem;
+      background: rgba(255, 255, 255, 0.015);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+      opacity: 0;
+      animation: slideUp 0.6s ease-out forwards;
+      -webkit-tap-highlight-color: transparent;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.15rem;
+      color: var(--text);
+      width: 100%;
+      text-align: left;
+    }
+
+    .emotion:nth-child(1) { animation-delay: 1.4s; }
+    .emotion:nth-child(2) { animation-delay: 1.48s; }
+    .emotion:nth-child(3) { animation-delay: 1.56s; }
+    .emotion:nth-child(4) { animation-delay: 1.64s; }
+    .emotion:nth-child(5) { animation-delay: 1.72s; }
+
+    .emotion:hover, .emotion:active {
+      background: rgba(125, 211, 224, 0.04);
+      border-color: var(--border-hover);
+      transform: translateX(2px);
+    }
+
+    .emotion.selected {
+      background: rgba(125, 211, 224, 0.08);
+      border-color: var(--teal);
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      box-shadow: 0 0 12px currentColor;
+    }
+
+    .dot.inhale   { background: var(--inhale);   color: var(--inhale); }
+    .dot.hold-in  { background: var(--hold-in);  color: var(--hold-in); }
+    .dot.exhale   { background: var(--exhale);   color: var(--exhale); }
+    .dot.hold-out { background: var(--hold-out); color: var(--hold-out); }
+    .dot.ease     { background: var(--text); color: var(--text); opacity: 0.7; }
+
+    .afterglow {
+      margin-top: auto;
+      padding-top: 1.5rem;
+      text-align: center;
+      opacity: 0;
+      transform: translateY(8px);
+      pointer-events: none;
+      transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .afterglow.visible {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .insight {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1rem;
+      font-style: italic;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      line-height: 1.4;
+      padding: 0 1rem;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 2.5rem;
+      margin-bottom: 1.75rem;
+      padding: 1rem 1.5rem;
+      background: rgba(255, 255, 255, 0.015);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    .stat { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; }
+
+    .stat-value {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.5rem;
+      color: var(--teal);
+    }
+
+    .stat-label {
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .done-btn {
+      display: inline-block;
+      padding: 0.85rem 3rem;
+      background: transparent;
+      border: 1px solid var(--teal);
+      border-radius: 999px;
+      color: var(--teal);
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .done-btn:hover { background: rgba(125, 211, 224, 0.08); }
+
+    @keyframes fadeIn  { to { opacity: 1; } }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="label">Session Complete</div>
+
+    <div class="orb-wrap"><div class="orb"></div></div>
+
+    <h1 class="headline">Well done</h1>
+    <p class="session-meta" id="sessionMeta"></p>
+
+    <div class="arc" id="arcRow">
+      <div class="arc-chip" id="entryChip">
+        <span class="arc-dot" id="entryDot"></span>
+        <span id="entryName"></span>
+      </div>
+      <div class="arc-line"></div>
+      <div class="arc-chip placeholder" id="exitChip">
+        <span class="arc-dot empty" id="exitDot"></span>
+        <span id="exitName">now?</span>
+      </div>
+    </div>
+
+    <h2 class="question">How are you now?</h2>
+
+    <div class="emotions">
+      <button class="emotion" data-emotion="anxious"   data-color="inhale">
+        <span class="dot inhale"></span><span>Anxious</span>
+      </button>
+      <button class="emotion" data-emotion="restless"  data-color="hold-in">
+        <span class="dot hold-in"></span><span>Restless</span>
+      </button>
+      <button class="emotion" data-emotion="foggy"     data-color="hold-out">
+        <span class="dot hold-out"></span><span>Foggy</span>
+      </button>
+      <button class="emotion" data-emotion="scattered" data-color="exhale">
+        <span class="dot exhale"></span><span>Scattered</span>
+      </button>
+      <button class="emotion" data-emotion="ease"      data-color="ease">
+        <span class="dot ease"></span><span>At ease</span>
+      </button>
+    </div>
+
+    <div class="afterglow" id="afterglow">
+      <p class="insight" id="insight"></p>
+      <div class="stats">
+        <div class="stat">
+          <span class="stat-value" id="sessionCount">0</span>
+          <span class="stat-label">Sessions</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value" id="streakCount">0 🔥</span>
+          <span class="stat-label">Day Streak</span>
+        </div>
+      </div>
+      <button class="done-btn" id="doneBtn">Done</button>
+    </div>
+  </div>
+
+  <script>
+    const params      = new URLSearchParams(window.location.search);
+    const practice    = params.get('practice')     || 'box';
+    const practiceName= params.get('practiceName') || 'Box Breathing';
+    const duration    = params.get('duration')     || '5';
+    const cycles      = params.get('cycles')       || '';
+    const entryEmotion= params.get('emotion')      || '';
+    const sessions    = params.get('sessions')     || '0';
+    const streak      = params.get('streak')       || '0';
+
+    // Session meta line
+    document.getElementById('sessionMeta').textContent =
+      [duration + ' min', practiceName, cycles].filter(Boolean).join(' · ');
+
+    // Stats
+    document.getElementById('sessionCount').textContent = sessions;
+    document.getElementById('streakCount').textContent  = streak + ' 🔥';
+
+    // Emotion mappings
+    const emotionMap = {
+      anxious:   { name: 'Anxious',   dotClass: 'inhale'   },
+      restless:  { name: 'Restless',  dotClass: 'hold-in'  },
+      foggy:     { name: 'Foggy',     dotClass: 'hold-out' },
+      scattered: { name: 'Scattered', dotClass: 'exhale'   },
+      ease:      { name: 'At ease',   dotClass: 'ease'     },
+    };
+
+    // Entry chip
+    const entry = emotionMap[entryEmotion];
+    if (entry) {
+      document.getElementById('entryDot').classList.add('arc-dot', entry.dotClass);
+      document.getElementById('entryName').textContent = entry.name;
+    } else {
+      document.getElementById('arcRow').style.display = 'none';
+    }
+
+    // Rank for insight selection (higher = calmer)
+    const stateRank = { anxious: 0, restless: 1, foggy: 1, scattered: 1, ease: 3 };
+
+    const insights = {
+      improved: [
+        'A small shift — but every breath counts.',
+        'You gave yourself what you needed.',
+        'This is the practice working.',
+      ],
+      same: [
+        'Sometimes just showing up is enough.',
+        'Be gentle — presence is the practice.',
+        'You met yourself here. That matters.',
+      ],
+      deeper: [
+        'Notice what arose. Notice that you noticed.',
+        'Even discomfort is information.',
+        'Feelings move. Keep breathing.',
+      ],
+    };
+
+    function pickInsight(entry, exit) {
+      const diff = (stateRank[exit] ?? 1) - (stateRank[entry] ?? 1);
+      const pool = diff > 0 ? insights.improved : diff === 0 ? insights.same : insights.deeper;
+      return pool[Math.floor(Math.random() * pool.length)];
+    }
+
+    document.querySelectorAll('.emotion').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.emotion').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+
+        const emotion    = btn.dataset.emotion;
+        const colorClass = btn.dataset.color;
+        const name       = btn.querySelector('span:last-child').textContent;
+
+        // Fill exit chip
+        const exitDot  = document.getElementById('exitDot');
+        const exitChip = document.getElementById('exitChip');
+        exitDot.className = 'arc-dot ' + colorClass;
+        document.getElementById('exitName').textContent = name;
+        exitChip.classList.remove('placeholder');
+
+        // Show afterglow
+        document.getElementById('insight').textContent = pickInsight(entryEmotion, emotion);
+        setTimeout(() => document.getElementById('afterglow').classList.add('visible'), 400);
+
+        // Persist for future reference
+        try {
+          localStorage.setItem('lastSession', JSON.stringify({
+            date: new Date().toISOString(),
+            before: entryEmotion,
+            after: emotion,
+            practice,
+            duration: parseInt(duration),
+          }));
+        } catch {}
+      });
+    });
+
+    document.getElementById('doneBtn').addEventListener('click', () => {
+      window.location.href = 'index.html';
+    });
+  </script>
+</body>
+</html>

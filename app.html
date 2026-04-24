@@ -1317,26 +1317,42 @@
       animFrame = requestAnimationFrame(tick);
     }
 
+    const TECH_NAMES = {
+      box: 'Box Breathing', '478': '4 · 7 · 8', nadi: 'Nadi Sodhana',
+      wimhof: 'Wim Hof', holo: 'Holotropic', custom: 'Custom',
+    };
+
+    function completedCycles() {
+      if (currentTech === 'wimhof') return '3 rounds';
+      const phases = currentTech === 'box'
+        ? boxPhases.map((p, i) => ({ ...p, dur: boxTimings[i] }))
+        : currentTech === 'nadi'   ? nadiPhases
+        : currentTech === 'holo'   ? holoPhases
+        : currentTech === 'custom' ? buildCustomPhases()
+        : breathPhases;
+      const cycleSecs = phases.reduce((a, p) => a + p.dur, 0);
+      const n = Math.floor((selectedMinutes * 60) / cycleSecs);
+      return `${n} cycle${n !== 1 ? 's' : ''}`;
+    }
+
     function endSession() {
       running = false;
       cancelAnimationFrame(animFrame);
       if (currentTech === 'nadi') stopNadiMusic();
       incrementSession();
-      playGong(); setTimeout(playGong, 1500); setTimeout(playGong, 3000);
-      phaseText.textContent = 'Complete';
-      phaseText.style.color = 'var(--exhale)';
-      countText.textContent = '🙏';
-      guideText.textContent = '';
-      cycleText.textContent = currentTech === 'wimhof' ? '3 rounds' : `${selectedMinutes} minutes`;
-      totalBar.style.width = '100%';
-      startBtn.textContent = 'Begin';
-      optionsEl.style.opacity = '1'; optionsEl.style.pointerEvents = 'auto';
-      timingWrap.style.opacity = ''; timingWrap.style.pointerEvents = '';
-      customTimingWrap.style.opacity = ''; customTimingWrap.style.pointerEvents = '';
-      if (currentTech === 'box') resetBoxVisual();
-      else if (currentTech === 'nadi') { resetNadiVisual(); progressArc.style.strokeDashoffset = 0; }
-      else if (currentTech !== 'wimhof') { resetOrbVisual(); orbProgressArc.style.strokeDashoffset = 0; }
-      if (currentTech === 'wimhof') { roundText.textContent = '3 / 3 complete ✓'; }
+      playGong();
+
+      const stats = loadStats();
+      const p = new URLSearchParams({
+        practice:     currentTech,
+        practiceName: TECH_NAMES[currentTech] || currentTech,
+        duration:     selectedMinutes,
+        cycles:       completedCycles(),
+        emotion:      entryEmotion,
+        sessions:     stats.sessions || 0,
+        streak:       stats.streak   || 0,
+      });
+      setTimeout(() => { window.location.href = `complete.html?${p}`; }, 700);
     }
 
     function stopSession() {
@@ -1501,10 +1517,12 @@
     renderStats();
 
     // ── Auto-select from welcome page URL params ───────────────────────────
+    let entryEmotion = '';
     (function() {
       const params   = new URLSearchParams(window.location.search);
       const practice = params.get('practice');
       const duration = parseInt(params.get('duration'));
+      entryEmotion   = params.get('emotion') || '';
 
       if (!isNaN(duration)) {
         const durBtn = document.querySelector(`.dur-btn[data-min="${duration}"]`);
