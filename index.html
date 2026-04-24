@@ -1503,6 +1503,32 @@
     });
 
     renderStats();
+
+    // ── Auto-select from welcome page URL params ───────────────────────────
+    (function() {
+      const params   = new URLSearchParams(window.location.search);
+      const practice = params.get('practice');
+      const duration = parseInt(params.get('duration'));
+
+      if (!isNaN(duration)) {
+        const durBtn = document.querySelector(`.dur-btn[data-min="${duration}"]`);
+        if (durBtn) {
+          document.querySelectorAll('.dur-btn').forEach(b => b.classList.remove('selected'));
+          durBtn.classList.add('selected');
+          selectedMinutes = duration;
+        }
+      }
+
+      if (practice && practice !== 'free') {
+        if (practice === 'wimhof' || practice === 'holo') {
+          pendingTech = practice;
+          safetyText.textContent = SAFETY_MSGS[practice];
+          safetyModal.classList.add('open');
+        } else if (['box', '478', 'nadi', 'custom'].includes(practice)) {
+          switchTechnique(practice);
+        }
+      }
+    })();
   </script>
 </body>
 </html>
