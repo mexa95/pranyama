@@ -444,6 +444,12 @@
       75%  { transform: scale(1); opacity: 1; }
       100% { transform: scale(0.8); opacity: 0; }
     }
+
+    .custom-hold-row {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 8px;
+    }
   </style>
 </head>
 <body>
@@ -459,6 +465,7 @@
       <button class="tech-btn" data-tech="478">4 · 7 · 8</button>
       <button class="tech-btn" data-tech="wimhof">Wim Hof</button>
       <button class="tech-btn" data-tech="holo">Holotropic</button>
+      <button class="tech-btn" data-tech="custom">Custom</button>
     </div>
 
     <div class="timing-wrap" id="timingWrap">
@@ -479,6 +486,35 @@
         <div class="timing-item">
           <div class="timing-name" style="color:var(--hold2)">Hold</div>
           <div class="stepper"><button class="step-btn" id="dec3">−</button><span class="step-val" id="tv3">4</span><button class="step-btn" id="inc3">+</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="timing-wrap hidden" id="customTimingWrap">
+      <div class="timing-lbl">Custom Breathwork</div>
+      <div class="custom-hold-row">
+        <label class="toggle-row">
+          <input type="checkbox" id="customHoldToggle">
+          <div class="toggle-track"></div>
+          <span>With holds</span>
+        </label>
+      </div>
+      <div class="timing-grid">
+        <div class="timing-item">
+          <div class="timing-name" style="color:var(--inhale)">Inhale</div>
+          <div class="stepper"><button class="step-btn" id="cdec0">−</button><span class="step-val" id="ctv0">4</span><button class="step-btn" id="cinc0">+</button></div>
+        </div>
+        <div class="timing-item hidden" id="customHoldInItem">
+          <div class="timing-name" style="color:var(--hold)">Hold</div>
+          <div class="stepper"><button class="step-btn" id="cdec1">−</button><span class="step-val" id="ctv1">4</span><button class="step-btn" id="cinc1">+</button></div>
+        </div>
+        <div class="timing-item">
+          <div class="timing-name" style="color:var(--exhale)">Exhale</div>
+          <div class="stepper"><button class="step-btn" id="cdec2">−</button><span class="step-val" id="ctv2">4</span><button class="step-btn" id="cinc2">+</button></div>
+        </div>
+        <div class="timing-item hidden" id="customHoldOutItem">
+          <div class="timing-name" style="color:var(--hold2)">Hold</div>
+          <div class="stepper"><button class="step-btn" id="cdec3">−</button><span class="step-val" id="ctv3">4</span><button class="step-btn" id="cinc3">+</button></div>
         </div>
       </div>
     </div>
@@ -900,7 +936,10 @@
     const leftFlowOut  = document.getElementById('leftFlowOut');
     const rightFlowIn  = document.getElementById('rightFlowIn');
     const rightFlowOut = document.getElementById('rightFlowOut');
-    const timingWrap   = document.getElementById('timingWrap');
+    const timingWrap        = document.getElementById('timingWrap');
+    const customTimingWrap  = document.getElementById('customTimingWrap');
+    const customHoldInItem  = document.getElementById('customHoldInItem');
+    const customHoldOutItem = document.getElementById('customHoldOutItem');
     const orbSvg       = document.getElementById('orbSvg');
     const orbProgressArc = document.getElementById('orbProgressArc');
     const breathOrb    = document.getElementById('breathOrb');
@@ -950,6 +989,55 @@
       });
     });
 
+    // ── Custom breathwork ──────────────────────────────────────────────────
+    const customTimings = [4, 4, 4, 4]; // inhale, hold-in, exhale, hold-out
+    let customHolds = false;
+
+    function buildCustomPhases() {
+      const phases = [];
+      phases.push({ name: 'Inhale', hex: '#5ba4d9', freq: 396, dur: customTimings[0] });
+      if (customHolds) phases.push({ name: 'Hold', hex: '#a78bfa', freq: 528, dur: customTimings[1] });
+      phases.push({ name: 'Exhale', hex: '#5bd9a4', freq: 432, dur: customTimings[2] });
+      if (customHolds) phases.push({ name: 'Hold', contracted: true, hex: '#d9a45b', freq: 480, dur: customTimings[3] });
+      return phases;
+    }
+
+    function updateCustomSubtitle() {
+      const parts = [customTimings[0]];
+      if (customHolds) parts.push(customTimings[1]);
+      parts.push(customTimings[2]);
+      if (customHolds) parts.push(customTimings[3]);
+      subtitleEl.textContent = `Custom — ${parts.join(' · ')}`;
+      legendHold2.classList.toggle('hidden', !customHolds);
+    }
+
+    document.getElementById('customHoldToggle').addEventListener('change', function() {
+      if (running) return;
+      customHolds = this.checked;
+      customHoldInItem.classList.toggle('hidden', !customHolds);
+      customHoldOutItem.classList.toggle('hidden', !customHolds);
+      updateCustomSubtitle();
+    });
+
+    [0, 1, 2, 3].forEach(i => {
+      document.getElementById(`cdec${i}`).addEventListener('click', () => {
+        if (running || customTimings[i] <= MIN_DUR) return;
+        customTimings[i]--;
+        document.getElementById(`ctv${i}`).textContent = customTimings[i];
+        document.getElementById(`cdec${i}`).disabled = customTimings[i] <= MIN_DUR;
+        document.getElementById(`cinc${i}`).disabled = false;
+        updateCustomSubtitle();
+      });
+      document.getElementById(`cinc${i}`).addEventListener('click', () => {
+        if (running || customTimings[i] >= MAX_DUR) return;
+        customTimings[i]++;
+        document.getElementById(`ctv${i}`).textContent = customTimings[i];
+        document.getElementById(`cinc${i}`).disabled = customTimings[i] >= MAX_DUR;
+        document.getElementById(`cdec${i}`).disabled = false;
+        updateCustomSubtitle();
+      });
+    });
+
     function switchTechnique(tech) {
       currentTech = tech;
       document.querySelectorAll('.tech-btn').forEach(b =>
@@ -964,6 +1052,7 @@
       guideText.classList.add('hidden');
       legendHold2.classList.add('hidden');
       timingWrap.classList.add('hidden');
+      customTimingWrap.classList.add('hidden');
       roundText.classList.add('hidden');
       roundText.textContent = '';
 
@@ -988,6 +1077,11 @@
       } else if (tech === 'holo') {
         orbSvg.classList.remove('hidden');
         subtitleEl.textContent = 'Holotropic — Circular Breathing';
+        resetOrbVisual();
+      } else if (tech === 'custom') {
+        orbSvg.classList.remove('hidden');
+        customTimingWrap.classList.remove('hidden');
+        updateCustomSubtitle();
         resetOrbVisual();
       } else {
         orbSvg.classList.remove('hidden');
@@ -1072,8 +1166,9 @@
     // ── 4-7-8 orb visual ──────────────────────────────────────────────────
     function applyOrbState(p, phaseFrac, cycleTime, CYCLE) {
       const minS = 0.38, maxS = 1.28;
-      const scale = p.name === 'Inhale' ? minS + phaseFrac * (maxS - minS)
-                  : p.name === 'Hold'   ? maxS
+      const scale = p.name === 'Inhale'              ? minS + phaseFrac * (maxS - minS)
+                  : p.name === 'Hold' && !p.contracted ? maxS
+                  : p.name === 'Hold' && p.contracted  ? minS
                   : maxS - phaseFrac * (maxS - minS);
       breathOrb.style.transform = `scale(${scale})`;
       breathOrb.setAttribute('fill', p.hex + '1e');
@@ -1129,6 +1224,8 @@
       optionsEl.style.pointerEvents = 'none';
       timingWrap.style.opacity = '0.3';
       timingWrap.style.pointerEvents = 'none';
+      customTimingWrap.style.opacity = '0.3';
+      customTimingWrap.style.pointerEvents = 'none';
       if (document.getElementById('voiceToggle').checked) await initVoiceAudio();
       await startCountdown();
       if (!running) return;
@@ -1138,8 +1235,9 @@
 
       const phases = currentTech === 'box'
         ? boxPhases.map((p, i) => ({ ...p, dur: boxTimings[i] }))
-        : currentTech === 'nadi' ? nadiPhases
-        : currentTech === 'holo' ? holoPhases
+        : currentTech === 'nadi'   ? nadiPhases
+        : currentTech === 'holo'   ? holoPhases
+        : currentTech === 'custom' ? buildCustomPhases()
         : breathPhases;
 
       // Pre-compute cumulative phase start times for variable-duration support
@@ -1234,6 +1332,7 @@
       startBtn.textContent = 'Begin';
       optionsEl.style.opacity = '1'; optionsEl.style.pointerEvents = 'auto';
       timingWrap.style.opacity = ''; timingWrap.style.pointerEvents = '';
+      customTimingWrap.style.opacity = ''; customTimingWrap.style.pointerEvents = '';
       if (currentTech === 'box') resetBoxVisual();
       else if (currentTech === 'nadi') { resetNadiVisual(); progressArc.style.strokeDashoffset = 0; }
       else if (currentTech !== 'wimhof') { resetOrbVisual(); orbProgressArc.style.strokeDashoffset = 0; }
@@ -1253,6 +1352,7 @@
       startBtn.textContent = 'Begin';
       optionsEl.style.opacity = '1'; optionsEl.style.pointerEvents = 'auto';
       timingWrap.style.opacity = ''; timingWrap.style.pointerEvents = '';
+      customTimingWrap.style.opacity = ''; customTimingWrap.style.pointerEvents = '';
       totalBarWrap.classList.add('hidden');
       totalBar.style.width = '0%';
       if (currentTech === 'box') resetBoxVisual();
