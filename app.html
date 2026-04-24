@@ -952,6 +952,7 @@
     let running = false;
     let animFrame = null;
     let currentTech = 'box';
+    let entryEmotion = '';
     const boxTimings = [4, 4, 4, 4]; // inhale, hold, exhale, hold — user-adjustable
     const MIN_DUR = 2, MAX_DUR = 12;
 
@@ -1332,7 +1333,21 @@
         : breathPhases;
       const cycleSecs = phases.reduce((a, p) => a + p.dur, 0);
       const n = Math.floor((selectedMinutes * 60) / cycleSecs);
-      return `${n} cycle${n !== 1 ? 's' : ''}`;
+      return n + ' cycle' + (n !== 1 ? 's' : '');
+    }
+
+    function goToComplete(completed) {
+      const stats = loadStats();
+      const qs = new URLSearchParams({
+        practice:     currentTech,
+        practiceName: TECH_NAMES[currentTech] || currentTech,
+        duration:     selectedMinutes,
+        cycles:       completed ? completedCycles() : '',
+        emotion:      typeof entryEmotion !== 'undefined' ? entryEmotion : '',
+        sessions:     stats.sessions || 0,
+        streak:       stats.streak   || 0,
+      });
+      window.location.href = 'complete.html?' + qs.toString();
     }
 
     function endSession() {
@@ -1341,40 +1356,14 @@
       if (currentTech === 'nadi') stopNadiMusic();
       incrementSession();
       playGong();
-
-      const stats = loadStats();
-      const p = new URLSearchParams({
-        practice:     currentTech,
-        practiceName: TECH_NAMES[currentTech] || currentTech,
-        duration:     selectedMinutes,
-        cycles:       completedCycles(),
-        emotion:      entryEmotion,
-        sessions:     stats.sessions || 0,
-        streak:       stats.streak   || 0,
-      });
-      setTimeout(() => { window.location.href = `complete.html?${p}`; }, 700);
+      setTimeout(function() { goToComplete(true); }, 600);
     }
 
     function stopSession() {
       running = false;
       cancelAnimationFrame(animFrame);
       if (currentTech === 'nadi') stopNadiMusic();
-      phaseText.textContent = 'Ready';
-      phaseText.style.color = 'var(--text)';
-      countText.textContent = '—';
-      countText.style.color = 'var(--text)';
-      guideText.textContent = '';
-      cycleText.textContent = '';
-      startBtn.textContent = 'Begin';
-      optionsEl.style.opacity = '1'; optionsEl.style.pointerEvents = 'auto';
-      timingWrap.style.opacity = ''; timingWrap.style.pointerEvents = '';
-      customTimingWrap.style.opacity = ''; customTimingWrap.style.pointerEvents = '';
-      totalBarWrap.classList.add('hidden');
-      totalBar.style.width = '0%';
-      if (currentTech === 'box') resetBoxVisual();
-      else if (currentTech === 'nadi') resetNadiVisual();
-      else resetOrbVisual();
-      if (currentTech === 'wimhof') { roundText.textContent = ''; }
+      goToComplete(false);
     }
 
     // ── Wim Hof engine ────────────────────────────────────────────────────
@@ -1517,7 +1506,6 @@
     renderStats();
 
     // ── Auto-select from welcome page URL params ───────────────────────────
-    let entryEmotion = '';
     (function() {
       const params   = new URLSearchParams(window.location.search);
       const practice = params.get('practice');

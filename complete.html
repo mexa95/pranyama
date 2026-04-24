@@ -386,6 +386,9 @@
     const sessions    = params.get('sessions')     || '0';
     const streak      = params.get('streak')       || '0';
 
+    // Headline adapts for stopped vs. completed
+    if (!cycles) document.querySelector('.headline').textContent = 'Good work';
+
     // Session meta line
     document.getElementById('sessionMeta').textContent =
       [duration + ' min', practiceName, cycles].filter(Boolean).join(' · ');
